@@ -18,7 +18,7 @@ func main() {
 	sum := 0
 	s := []int {}
 	for scanner.Scan() {
-		if len(scanner.Text()) > 0 {
+	    if len(scanner.Text()) > 0 {
 			cur, err := strconv.Atoi(scanner.Text())
 			if err != nil {
 				log.Fatal(err)
