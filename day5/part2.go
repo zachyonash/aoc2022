@@ -9,38 +9,24 @@ import (
 	"strings"
 )
 
-func contains(elf []int, s int) bool {
-	for _, i := range elf {
-		if i == s {
-			return true
-		}
-	}
-	return false
+func pop(count int, slice []string) ([]string, []string) {
+	var boxes []string
+	boxes, slice = slice[len(slice)-count:], slice[:len(slice)-count]
+	return boxes, slice
 }
 
-func overlap(elf1Lo, elf1Hi, elf2Lo, elf2Hi int) int {
-	elf1arr := make([]int, elf1Hi-elf1Lo+1)
-	for i := range elf1arr {
-		elf1arr[i] = i + elf1Lo
+func moveBoxes(count, from, to string, slices map[string][]string) map[string][]string {
+	convCount, _ := strconv.Atoi(count)
+	convFrom, _ := strconv.Atoi(from)
+	convTo, _ := strconv.Atoi(to)
+	from = strconv.Itoa(convFrom - 1)
+	to = strconv.Itoa(convTo - 1)
+	var boxes []string
+	if len(slices[from]) >= convCount {
+		boxes, slices[from] = pop(convCount, slices[from])
+		slices[to] = append(slices[to], boxes...)
 	}
-	elf2arr := make([]int, elf2Hi-elf2Lo+1)
-	for i := range elf2arr {
-		elf2arr[i] = i + elf2Lo
-	}
-
-	for _, i := range elf1arr {
-		if contains(elf2arr, i) {
-			return 1
-		}
-	}
-
-	for _, i := range elf2arr {
-		if contains(elf1arr, i) {
-			return 1
-		}
-	}
-
-	return 0
+	return slices
 }
 
 func main() {
@@ -50,15 +36,41 @@ func main() {
 	}
 	scanner := bufio.NewScanner(f)
 	count := 0
+	slices := map[string][]string{}
+	stop := 0
 	for scanner.Scan() {
-		temp := strings.Split(scanner.Text(), ",")
-		elf1 := strings.Split(temp[0], "-")
-		elf2 := strings.Split(temp[1], "-")
-		elf1Lo, _ := strconv.Atoi(elf1[0])
-		elf1Hi, _ := strconv.Atoi(elf1[1])
-		elf2Lo, _ := strconv.Atoi(elf2[0])
-		elf2Hi, _ := strconv.Atoi(elf2[1])
-		count += overlap(elf1Lo, elf1Hi, elf2Lo, elf2Hi)
+		if scanner.Text() == "" {
+			continue
+		}
+		if scanner.Text()[:1] == " " {
+			// reverse slices
+			for _, s := range slices {
+				for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+					s[i], s[j] = s[j], s[i]
+				}
+			}
+			continue
+		} else if scanner.Text()[:1] == "m" {
+			stop++
+			// follow directions, move boxes
+			split := strings.Split(scanner.Text(), " ")
+			slices = moveBoxes(split[1], split[3], split[5], slices)
+			// if stop > 8 {
+			// 	os.Exit(0)
+			// }
+		} else {
+			for i := range make([]int, 9) {
+				if strings.TrimSpace(scanner.Text()[count:count+3]) == "" {
+					// Do nothing!
+				} else {
+					slices[strconv.Itoa(i)] = append(slices[strconv.Itoa(i)], scanner.Text()[count:count+3])
+				}
+				count += 4
+			}
+			count = 0
+		}
 	}
-	fmt.Println(count)
+	for i := range make([]int, 9) {
+		fmt.Println(slices[strconv.Itoa(i)])
+	}
 }
